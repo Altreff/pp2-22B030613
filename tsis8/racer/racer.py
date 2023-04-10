@@ -1,4 +1,4 @@
-# Imports
+
 import pygame, sys
 from pygame.locals import *
 import random, time
@@ -23,6 +23,7 @@ SCREEN_HEIGHT = 600
 SPEED = 5
 SCORE = 0
 COIN = 0
+COIN_NUM = 0
 
 # Setting up Fonts
 font = pygame.font.SysFont("Verdana", 60)
@@ -88,28 +89,45 @@ class Coin(pygame.sprite.Sprite):
         if (self.rect.top > 600):
             self.rect.top = 0
             self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+
+class Bag(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("bag.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+
+    def move(self):
+        global COIN
+        self.rect.move_ip(0, SPEED+2)
+        if (self.rect.top > 600):
+            self.rect.top = 0
+            self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
 # Setting up Sprites
 P1 = Player()
 E1 = Enemy()
 C = Coin()
+B = Bag()
 # Creating Sprites Groups
 enemies = pygame.sprite.Group()
 enemies.add(E1)
-loots = pygame.sprite.Group()
-loots.add(C)
+small_loots = pygame.sprite.Group()
+small_loots.add(C)
+big_loots = pygame.sprite.Group()
+big_loots.add(B)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 all_sprites.add(E1)
 all_sprites.add(C)
+all_sprites.add(B)
 
-# Adding a new User event
 INC_SPEED = pygame.USEREVENT + 1
 pygame.time.set_timer(INC_SPEED, 1000)
 
-# Game Loop
+
 while True:
 
-    # Cycles through all events occurring
+
     for event in pygame.event.get():
         if event.type == INC_SPEED:
             SPEED += 0.5
@@ -126,12 +144,21 @@ while True:
         DISPLAYSURF.blit(entity.image, entity.rect)
         entity.move()
 
-    if pygame.sprite.spritecollideany(P1, loots):
+    if pygame.sprite.spritecollideany(P1, small_loots):
         COIN += 1
+        COIN_NUM += 1
         C.rect.top = 0
         C.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
 
+    if pygame.sprite.spritecollideany(P1, big_loots):
+        COIN += 2
+        COIN_NUM += 2
+        B.rect.top = 0
+        B.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
 
+    if COIN_NUM == 5:
+        COIN_NUM = 0
+        SPEED += 0.5
     if pygame.sprite.spritecollideany(P1, enemies):
         pygame.mixer.music.stop()
         pygame.mixer.Sound('crash.wav').play()
